@@ -1,0 +1,1 @@
+CREATE TABLE userData( id INT PRIMARY KEY, name TEXT UNIQUE, psw TEXT)

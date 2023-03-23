@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "${workspaceFolder:pythonServer}/userData.db",
+            "name": "userData"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}
