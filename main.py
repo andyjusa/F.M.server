@@ -9,6 +9,8 @@ import random
 con = sqlite3.connect("./userData.db")
 c = con.cursor()
 
+c.execute('''CREATE TABLE IF NOT EXISTS userdata
+             (id INT PRIMARY KEY, name TEXT UNIQUE,psw TEXT)''')
 
 sender = "andyjung1129@naver.com"
 
@@ -27,7 +29,7 @@ def sendNum(receiver,num):
     smtp_session.sendmail(sender, receiver, message.as_string())
     smtp_session.quit()
 
-schedule = [[0,1,2,3,4,5,
+schedule = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[0,1,2,3,4,5,
              6,0,0,0,0,0,
              7,0,0,0,0,0,
              8,0,0,0,0,0,
@@ -42,6 +44,16 @@ schedule = [[0,1,2,3,4,5,
                    ,10,21 ,23 ,13 ,17 ,120
                    ,11,121,17 ,13 ,14 ,122
                    ,12,23 ,120,0  ,15 ,21]]
+
+def user_exists(name,id):
+    c.execute("SELECT * FROM userData WHERE name=?", (name,))
+    if c.fetchone():
+        return True
+    else:
+        c.execute("SELECT * FROM userData WHERE id=?", (id,))
+        if c.fetchone():
+            return True
+        return False
 
 testNum = {"23ms2322":8989}
 
@@ -59,20 +71,30 @@ def emailTest(sid,data):
 
 @sio.on('login')
 def login(sid,data):
-    pass
+    c.execute("SELECT * FROM userData WHERE name=? AND psw=?",(data[0],data[1]))
+    result = c.fetchone()
+    if result:
+        print(('suceed',result[0],data[0]))
+        sio.emit('logined',('suceed',result[0],data[0]))
+    else:
+        sio.emit('logined',('failed',))
+
 @sio.on('register')
 def register(sid,data):
-    try:
-        if data[1]==testNum[data[0]]:
-            print(f"INSERT INTO userData VALUES({int(data[0][4:])}, {data[2]},{data[3]})")
-            c.execute(f"INSERT INTO userData VALUES({int(data[0][4:])}, '{data[2]}','{data[3]}')")
-            con.commit()
-    except sqlite3.IntegrityError:
-        pass
+    if data[1]==testNum[data[0]] and not user_exists(data[2],int(data[0][4:8])):
+        c.execute("INSERT INTO userData VALUES(?,?,?)",(int(data[0][4:8]),data[2],data[3]))
+        print('Suceed')
+        con.commit()
+        sio.emit("registed","done")
+    else:
+        sio.emit("registed","fail")
+
 @sio.on('getSchedule')
 def getSchedule(sid,data):
+    print(data)
     byte_data = bytes(schedule[data])
     sio.emit('schedule', byte_data)
+
 @sio.on('disconnect')
 def disconnect(sid):
     print(f'Disconnected: {sid}')
