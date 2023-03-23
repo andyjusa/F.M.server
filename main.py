@@ -56,7 +56,10 @@ def emailTest(sid,data):
     testNum[data] = random.randint(1000,9999)
     sendNum(data,testNum[data])
     print(data)
-#TODO: 로그인 및 회원가입 구현
+
+@sio.on('login')
+def login(sid,data):
+    pass
 @sio.on('register')
 def register(sid,data):
     try:
